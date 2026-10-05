@@ -1,0 +1,86 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Citrix Security Bulletins",
+        "description": "Security bulletins for Citrix NetScaler are retrieved from the NIST National Vulnerability Database (NVD). An API key is optional but recommended (higher rate limit). Request one at {nvd_url}",
+        "data": {
+          "api_key": "NVD API key (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Change NVD API key",
+        "data": {
+          "api_key": "NVD API key (optional)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "NVD API key rejected",
+        "description": "The NVD rejected the stored API key. Enter a new key or leave the field empty to continue without a key.",
+        "data": {
+          "api_key": "NVD API key (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the NVD API",
+      "invalid_api_key": "Invalid NVD API key",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Already configured",
+      "single_instance_allowed": "Only a single configuration is allowed",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Re-configuration was successful"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Monitored products",
+        "description": "Select the Citrix products whose security bulletins should be monitored.",
+        "data": {
+          "products": "Products"
+        }
+      }
+    },
+    "error": {
+      "no_products": "Select at least one product"
+    }
+  },
+  "selector": {
+    "products": {
+      "options": {
+        "netscaler_adc": "NetScaler ADC (incl. FIPS / NDcPP)",
+        "netscaler_gateway": "NetScaler Gateway"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_bulletin": {
+        "name": "Latest bulletin"
+      }
+    },
+    "event": {
+      "new_bulletin": {
+        "name": "New bulletin",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "new_bulletin": "New bulletin"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_api_key": {
+      "message": "The NVD API key was rejected"
+    },
+    "update_failed": {
+      "message": "Error fetching data from the NVD: {error}"
+    }
+  }
+}

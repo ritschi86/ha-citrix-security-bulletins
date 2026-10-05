@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "latest_bulletin": {
+        "default": "mdi:shield-alert"
+      }
+    },
+    "event": {
+      "new_bulletin": {
+        "default": "mdi:shield-bug"
+      }
+    }
+  }
+}

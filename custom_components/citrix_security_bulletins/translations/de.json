@@ -1,0 +1,86 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Citrix Security Bulletins",
+        "description": "Die Security Bulletins für Citrix NetScaler werden aus der NIST National Vulnerability Database (NVD) abgerufen. Ein API-Schlüssel ist optional, aber empfohlen (höheres Rate-Limit). Beantragen unter {nvd_url}",
+        "data": {
+          "api_key": "NVD-API-Schlüssel (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "NVD-API-Schlüssel ändern",
+        "data": {
+          "api_key": "NVD-API-Schlüssel (optional)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "NVD-API-Schlüssel abgelehnt",
+        "description": "Die NVD hat den gespeicherten API-Schlüssel abgelehnt. Gib einen neuen Schlüssel ein oder lass das Feld leer, um ohne Schlüssel fortzufahren.",
+        "data": {
+          "api_key": "NVD-API-Schlüssel (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur NVD-API fehlgeschlagen",
+      "invalid_api_key": "Ungültiger NVD-API-Schlüssel",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "abort": {
+      "already_configured": "Bereits eingerichtet",
+      "single_instance_allowed": "Es ist nur eine Konfiguration erlaubt",
+      "reauth_successful": "Erneute Authentifizierung erfolgreich",
+      "reconfigure_successful": "Neukonfiguration erfolgreich"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Überwachte Produkte",
+        "description": "Wähle die Citrix-Produkte, deren Security Bulletins überwacht werden sollen.",
+        "data": {
+          "products": "Produkte"
+        }
+      }
+    },
+    "error": {
+      "no_products": "Wähle mindestens ein Produkt aus"
+    }
+  },
+  "selector": {
+    "products": {
+      "options": {
+        "netscaler_adc": "NetScaler ADC (inkl. FIPS / NDcPP)",
+        "netscaler_gateway": "NetScaler Gateway"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_bulletin": {
+        "name": "Neuestes Bulletin"
+      }
+    },
+    "event": {
+      "new_bulletin": {
+        "name": "Neues Bulletin",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "new_bulletin": "Neues Bulletin"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_api_key": {
+      "message": "Der NVD-API-Schlüssel wurde abgelehnt"
+    },
+    "update_failed": {
+      "message": "Fehler beim Abrufen der Daten von der NVD: {error}"
+    }
+  }
+}
