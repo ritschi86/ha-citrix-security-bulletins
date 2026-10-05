@@ -24,7 +24,7 @@ Beim allerersten Abruf (und nach einer Änderung der Produktauswahl) werden **ke
 
 ## Installation
 
-**HACS:** HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories → Repo-URL, Kategorie *Integration* → installieren → Home Assistant neu starten.
+**HACS:** HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories → `https://github.com/ritschi86/ha-citrix-security-bulletins`, Kategorie *Integration* → installieren → Home Assistant neu starten.
 
 **Manuell:** `custom_components/citrix_security_bulletins` nach `/config/custom_components/` kopieren und neu starten.
 
@@ -57,4 +57,3 @@ actions:
         {{ trigger.to_state.attributes.url }}
 ```
 
-> Vor dem Veröffentlichen in `manifest.json` die Platzhalter `OWNER` (GitHub-Benutzer) und `codeowners` anpassen.

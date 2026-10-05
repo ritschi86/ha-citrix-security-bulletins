@@ -1,12 +1,12 @@
 {
   "domain": "citrix_security_bulletins",
   "name": "Citrix Security Bulletins",
-  "codeowners": [],
+  "codeowners": ["@ritschi86"],
   "config_flow": true,
-  "documentation": "https://github.com/OWNER/ha-citrix-security-bulletins",
+  "documentation": "https://github.com/ritschi86/ha-citrix-security-bulletins",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/OWNER/ha-citrix-security-bulletins/issues",
+  "issue_tracker": "https://github.com/ritschi86/ha-citrix-security-bulletins/issues",
   "requirements": [],
   "single_config_entry": true,
   "version": "1.0.0"
