@@ -57,3 +57,7 @@ actions:
         {{ trigger.to_state.attributes.url }}
 ```
 
+
+## Lizenz
+
+[MIT](LICENSE)
