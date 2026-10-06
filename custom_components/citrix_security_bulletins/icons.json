@@ -12,6 +12,9 @@
       },
       "article_url": {
         "default": "mdi:link-variant"
+      },
+      "nvd_url": {
+        "default": "mdi:database-search"
       }
     },
     "event": {

@@ -19,6 +19,7 @@ Citrix bietet keinen offiziellen maschinenlesbaren Feed mehr an (der frühere RS
 | Sensor **CVSS-Score** | Höchster CVSS-Basiswert des neuesten Bulletins (Zahl, mit Verlauf) |
 | Sensor **Schweregrad** | Kritisch / Hoch / Mittel / Niedrig |
 | Sensor **Artikel-URL** | Direkter Link zum Citrix-Artikel, z. B. `https://support.citrix.com/external/article/CTX697096` |
+| Sensor **NIST-NVD-URL** | NVD-Seite der CVE mit dem höchsten Score, z. B. `https://nvd.nist.gov/vuln/detail/CVE-2026-88771`; alle CVE-Links im Attribut `nvd_urls` |
 | Event **Neues Bulletin** | Event-Typ `new_bulletin` mit denselben Daten – feuert einmal pro neu erkanntem Bulletin |
 
 Die genaue Entity-ID siehst du unter *Geräte & Dienste → Citrix Security Bulletins*; im Beispiel unten ggf. anpassen.

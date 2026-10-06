@@ -28,6 +28,7 @@ class CitrixSensorEntityDescription(SensorEntityDescription):
     """Describes a sensor derived from the latest bulletin."""
 
     value_fn: Callable[[Bulletin], str | float | None]
+    attributes_fn: Callable[[Bulletin], dict[str, Any]] | None = None
 
 
 SENSORS: tuple[CitrixSensorEntityDescription, ...] = (
@@ -49,6 +50,16 @@ SENSORS: tuple[CitrixSensorEntityDescription, ...] = (
         key="article_url",
         translation_key="article_url",
         value_fn=lambda b: b.url,
+    ),
+    CitrixSensorEntityDescription(
+        key="nvd_url",
+        translation_key="nvd_url",
+        # NVD page of the highest-rated CVE; all CVE pages are in "nvd_urls".
+        value_fn=lambda b: b.top_cve.nvd_url,
+        attributes_fn=lambda b: {
+            "cve": b.top_cve.cve_id,
+            "nvd_urls": [c.nvd_url for c in sorted(b.cves, key=lambda c: c.cve_id)],
+        },
     ),
 )
 
@@ -135,4 +146,9 @@ class CitrixBulletinSensor(CitrixBulletinEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Reference the bulletin the value belongs to."""
         bulletins = self.coordinator.data.bulletins
-        return {"bulletin_id": bulletins[0].bulletin_id} if bulletins else None
+        if not bulletins:
+            return None
+        attributes: dict[str, Any] = {"bulletin_id": bulletins[0].bulletin_id}
+        if self.entity_description.attributes_fn:
+            attributes.update(self.entity_description.attributes_fn(bulletins[0]))
+        return attributes

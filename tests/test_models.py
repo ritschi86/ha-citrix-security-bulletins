@@ -94,6 +94,8 @@ def test_grouping_and_roundtrip():
         "NetScaler ADC and NetScaler Gateway Security Bulletin for CVE-2026-88771 and CVE-2026-88772"
     )
     assert latest.url == "https://support.citrix.com/external/article/CTX697096"
+    assert latest.top_cve.cve_id == "CVE-2026-88771"
+    assert latest.top_cve.nvd_url == "https://nvd.nist.gov/vuln/detail/CVE-2026-88771"
     assert bulletins[1].url == "https://nvd.nist.gov/vuln/detail/CVE-2026-5000"
     assert bulletins[2].known_exploited
     data = latest.as_event_data()

@@ -76,6 +76,9 @@
       },
       "article_url": {
         "name": "Artikel-URL"
+      },
+      "nvd_url": {
+        "name": "NIST-NVD-URL"
       }
     },
     "event": {

@@ -130,6 +130,11 @@ class Bulletin:
         return max(scores) if scores else None
 
     @property
+    def top_cve(self) -> Cve:
+        """Return the CVE with the highest CVSS score (ties: lowest CVE ID)."""
+        return min(self.cves, key=lambda c: (-(c.cvss_score or -1.0), c.cve_id))
+
+    @property
     def severity(self) -> str | None:
         """Return the highest severity."""
         severities = [cve.severity for cve in self.cves if cve.severity]
