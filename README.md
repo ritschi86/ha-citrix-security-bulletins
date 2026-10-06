@@ -62,6 +62,8 @@ actions:
 ```
 
 
+Eine fertige Automation für eine **kritische iPhone-Nachricht** (ab Schweregrad Hoch) mit Buttons zum Citrix-Artikel und zur NIST NVD liegt in [`examples/automation_iphone_kritisch.yaml`](examples/automation_iphone_kritisch.yaml).
+
 ## Lizenz
 
 [MIT](LICENSE)

@@ -99,5 +99,6 @@ def test_grouping_and_roundtrip():
     assert bulletins[1].url == "https://nvd.nist.gov/vuln/detail/CVE-2026-5000"
     assert bulletins[2].known_exploited
     data = latest.as_event_data()
+    assert data["nvd_url"] == "https://nvd.nist.gov/vuln/detail/CVE-2026-88771"
     assert data["products"] == ["NetScaler ADC", "NetScaler Gateway"]
     assert data["published"].startswith("2026-09-27T15:00:00")

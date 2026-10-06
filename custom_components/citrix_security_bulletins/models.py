@@ -163,6 +163,7 @@ class Bulletin:
             "bulletin_id": self.bulletin_id,
             "title": self.title,
             "url": self.url,
+            "nvd_url": self.top_cve.nvd_url,
             "nvd_urls": [cve.nvd_url for cve in sorted(self.cves, key=lambda c: c.cve_id)],
             "severity": self.severity,
             "cvss_score": self.cvss_score,

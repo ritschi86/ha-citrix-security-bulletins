@@ -1,0 +1,48 @@
+alias: Citrix Security Bulletin – iPhone-Benachrichtigung
+description: >-
+  Meldet neue Citrix NetScaler Security Bulletins auf iphone_von_daniel.
+  Schweregrad Hoch/Kritisch als kritische Nachricht (umgeht Stummschaltung
+  und Fokus), alle anderen als normale Nachricht.
+mode: queued
+max: 10
+triggers:
+  - trigger: state
+    # Entity-ID ggf. anpassen (Geräte & Dienste → Citrix Security Bulletins)
+    entity_id: event.citrix_security_bulletins_neues_bulletin
+    not_from: unavailable
+conditions:
+  - condition: template
+    value_template: "{{ trigger.to_state.attributes.event_type == 'new_bulletin' }}"
+actions:
+  - variables:
+      b: "{{ trigger.to_state.attributes }}"
+      critical: "{{ b.severity in ['HIGH', 'CRITICAL'] }}"
+      severity_de: >-
+        {{ {'CRITICAL': 'Kritisch', 'HIGH': 'Hoch', 'MEDIUM': 'Mittel',
+            'LOW': 'Niedrig', 'NONE': 'Keine'}.get(b.severity, 'Unbekannt') }}
+      nvd_url: "{{ b.nvd_url | default(b.nvd_urls[0] if b.nvd_urls else b.url) }}"
+  - action: notify.mobile_app_iphone_von_daniel
+    data:
+      title: "Citrix {{ severity_de }}: {{ b.bulletin_id }}"
+      subtitle: >-
+        CVSS {{ b.cvss_score if b.cvss_score is not none else '–' }} ·
+        {{ b.products | join(', ') }}
+      message: >-
+        {{ '⚠️ Laut CISA aktiv ausgenutzt! ' if b.known_exploited }}{{ b.title }}
+      data:
+        url: "{{ b.url }}"
+        group: citrix-security-bulletins
+        tag: "{{ b.bulletin_id }}"
+        push:
+          interruption-level: "{{ 'critical' if critical else 'active' }}"
+          sound:
+            name: default
+            critical: "{{ 1 if critical else 0 }}"
+            volume: 1.0
+        actions:
+          - action: URI
+            title: Citrix-Artikel
+            uri: "{{ b.url }}"
+          - action: URI
+            title: NIST NVD
+            uri: "{{ nvd_url }}"
