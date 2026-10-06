@@ -1,6 +1,13 @@
 # Citrix Security Bulletins für Home Assistant
 
+[![KI-generiert](https://img.shields.io/badge/Code-100%25%20KI--generiert-8A2BE2)](#-ki-generiert)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5)](https://hacs.xyz)
+[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-blue)](LICENSE)
+
 Custom Integration, die neue **Citrix NetScaler Security Bulletins** (CTX-Artikel) erkennt und in Home Assistant bereitstellt.
+
+> [!NOTE]
+> **Reine KI-Integration:** Der gesamte Code dieser Integration wurde von einer KI geschrieben, ohne manuelle Code-Änderungen. Details siehe [KI-generiert](#-ki-generiert).
 
 ## Datenquelle
 
@@ -63,6 +70,20 @@ actions:
 
 
 Eine fertige Automation für eine **kritische iPhone-Nachricht** (ab Schweregrad Hoch) mit Buttons zum Citrix-Artikel und zur NIST NVD liegt in [`examples/automation_iphone_kritisch.yaml`](examples/automation_iphone_kritisch.yaml).
+
+## 🤖 KI-generiert
+
+Diese Integration ist ein reines KI-Projekt. **Sämtliche Dateien** – Python-Code, Config Flow, Übersetzungen, Tests, Beispiel-Automation, GitHub-Workflow und diese README – wurden von **Claude (Anthropic)** erstellt. Es gab **keine manuellen Code-Änderungen**.
+
+| Rolle | Aufgabe |
+|---|---|
+| **KI (Claude)** | Recherche der Datenquelle, Architektur, gesamter Code, Fehleranalyse und -behebung, Dokumentation |
+| **Mensch (Maintainer)** | Anforderungen vorgeben, Entscheidungen treffen, in Home Assistant testen, Fehlermeldungen zurückmelden, auf GitHub veröffentlichen |
+
+Grundlage waren ausschließlich die offiziellen Dokumentationen von Home Assistant, der Home Assistant Companion App und der NIST NVD API.
+
+> [!IMPORTANT]
+> Die Integration wird ohne Gewähr bereitgestellt (siehe [Lizenz](LICENSE)). Sie ersetzt keine offiziellen Citrix-Benachrichtigungen – für sicherheitskritische Umgebungen zusätzlich die [Citrix-Security-Alerts](https://support.citrix.com/user/alerts) abonnieren.
 
 ## Lizenz
 
