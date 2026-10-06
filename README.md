@@ -15,7 +15,10 @@ Citrix bietet keinen offiziellen maschinenlesbaren Feed mehr an (der frühere RS
 
 | Entität | Beschreibung |
 |---|---|
-| Sensor **Neuestes Bulletin** | State = CTX-ID des neuesten Bulletins. Attribute: `title`, `url`, `severity`, `cvss_score`, `cves`, `products`, `published`, `known_exploited` (CISA KEV), `description`, `recent_bulletins` |
+| Sensor **Neuestes Bulletin** | State = CTX-ID des neuesten Bulletins. Attribute: `title`, `url` (Citrix-Artikel), `nvd_urls`, `severity`, `cvss_score`, `cves`, `products`, `published`, `known_exploited` (CISA KEV), `description`, `recent_bulletins` |
+| Sensor **CVSS-Score** | Höchster CVSS-Basiswert des neuesten Bulletins (Zahl, mit Verlauf) |
+| Sensor **Schweregrad** | Kritisch / Hoch / Mittel / Niedrig |
+| Sensor **Artikel-URL** | Direkter Link zum Citrix-Artikel, z. B. `https://support.citrix.com/external/article/CTX697096` |
 | Event **Neues Bulletin** | Event-Typ `new_bulletin` mit denselben Daten – feuert einmal pro neu erkanntem Bulletin |
 
 Die genaue Entity-ID siehst du unter *Geräte & Dienste → Citrix Security Bulletins*; im Beispiel unten ggf. anpassen.

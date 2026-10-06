@@ -3,6 +3,15 @@
     "sensor": {
       "latest_bulletin": {
         "default": "mdi:shield-alert"
+      },
+      "cvss_score": {
+        "default": "mdi:gauge"
+      },
+      "severity": {
+        "default": "mdi:alert-octagon"
+      },
+      "article_url": {
+        "default": "mdi:link-variant"
       }
     },
     "event": {

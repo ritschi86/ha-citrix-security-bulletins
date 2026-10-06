@@ -60,6 +60,22 @@
     "sensor": {
       "latest_bulletin": {
         "name": "Neuestes Bulletin"
+      },
+      "cvss_score": {
+        "name": "CVSS-Score"
+      },
+      "severity": {
+        "name": "Schweregrad",
+        "state": {
+          "none": "Keine",
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch",
+          "critical": "Kritisch"
+        }
+      },
+      "article_url": {
+        "name": "Artikel-URL"
       }
     },
     "event": {

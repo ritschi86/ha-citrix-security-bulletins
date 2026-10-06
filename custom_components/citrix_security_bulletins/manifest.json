@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/ritschi86/ha-citrix-security-bulletins/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "1.0.1"
+  "version": "1.1.0"
 }

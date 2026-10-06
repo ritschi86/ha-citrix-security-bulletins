@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 import re
 from typing import Any
 
-from .const import NVD_DETAIL_URL, PRODUCT_NAMES
+from .const import CITRIX_ARTICLE_URL, NVD_DETAIL_URL, PRODUCT_NAMES
 
 # Citrix knowledge base / security bulletin IDs, e.g. CTX696300.
 _CTX_RE = re.compile(r"\b(CTX\d{5,7})\b", re.IGNORECASE)
@@ -158,6 +158,7 @@ class Bulletin:
             "bulletin_id": self.bulletin_id,
             "title": self.title,
             "url": self.url,
+            "nvd_urls": [cve.nvd_url for cve in sorted(self.cves, key=lambda c: c.cve_id)],
             "severity": self.severity,
             "cvss_score": self.cvss_score,
             "cves": self.cve_ids,
@@ -248,13 +249,21 @@ def group_bulletins(cves: dict[str, Cve]) -> list[Bulletin]:
     CVEs without a CTX reference become their own pseudo bulletin (ID = CVE ID).
     """
     groups: dict[str, list[Cve]] = {}
-    urls: dict[str, str] = {}
     for cve in cves.values():
-        key = cve.bulletin_id or cve.cve_id
-        groups.setdefault(key, []).append(cve)
-        if key not in urls:
-            urls[key] = cve.bulletin_url or cve.nvd_url
+        groups.setdefault(cve.bulletin_id or cve.cve_id, []).append(cve)
 
-    bulletins = [Bulletin(bulletin_id=key, url=urls[key], cves=items) for key, items in groups.items()]
+    bulletins = [
+        Bulletin(
+            bulletin_id=key,
+            # Direct Citrix article link; NVD page for CVEs without a CTX reference.
+            url=(
+                CITRIX_ARTICLE_URL.format(bulletin_id=key)
+                if key.startswith("CTX")
+                else items[0].nvd_url
+            ),
+            cves=items,
+        )
+        for key, items in groups.items()
+    ]
     bulletins.sort(key=lambda b: (b.published, b.bulletin_id), reverse=True)
     return bulletins
