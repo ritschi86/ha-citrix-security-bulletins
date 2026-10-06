@@ -27,13 +27,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import NvdAuthError, NvdClient, NvdError
-from .const import (
-    CONF_PRODUCTS,
-    DEFAULT_PRODUCTS,
-    DOMAIN,
-    PRODUCT_CPES,
-    PRODUCT_NETSCALER_GATEWAY,
-)
+from .const import CONF_PRODUCTS, DEFAULT_PRODUCTS, DOMAIN, PRODUCT_CPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,13 +62,20 @@ class CitrixSecurityBulletinsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate(self, api_key: str | None) -> dict[str, str]:
         """Validate connectivity and the optional API key."""
-        client = NvdClient(async_get_clientsession(self.hass), api_key)
+        session = async_get_clientsession(self.hass)
         try:
-            await client.async_validate(PRODUCT_CPES[PRODUCT_NETSCALER_GATEWAY])
+            await NvdClient(session, api_key).async_validate()
         except NvdAuthError:
+            # NVD answers some malformed requests with "Invalid apiKey" as well.
+            # Only blame the key if the same request works without it.
+            try:
+                await NvdClient(session).async_validate()
+            except NvdError as err:
+                _LOGGER.warning("NVD not reachable without API key either: %s", err)
+                return {"base": "cannot_connect"}
             return {CONF_API_KEY: "invalid_api_key"}
         except NvdError as err:
-            _LOGGER.debug("Validation failed: %s", err)
+            _LOGGER.warning("NVD validation failed: %s", err)
             return {"base": "cannot_connect"}
         except Exception:
             _LOGGER.exception("Unexpected exception")

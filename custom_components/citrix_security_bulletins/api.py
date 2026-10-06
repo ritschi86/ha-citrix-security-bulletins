@@ -81,7 +81,13 @@ class NvdClient:
                     if resp.status == 200:
                         return await resp.json()
                     message = resp.headers.get("message", "")
-                    _LOGGER.debug("NVD returned HTTP %s: %s", resp.status, message)
+                    _LOGGER.warning(
+                        "NVD returned HTTP %s (message: %s, api key used: %s) for %s",
+                        resp.status,
+                        message or "-",
+                        bool(self._api_key),
+                        url.path,
+                    )
                     if self._api_key and (
                         resp.status == 401 or "apikey" in message.lower()
                     ):
@@ -127,6 +133,6 @@ class NvdClient:
             if not page or start_index >= total:
                 return items
 
-    async def async_validate(self, cpe_match: str) -> None:
+    async def async_validate(self) -> None:
         """Perform a minimal request to validate connectivity and API key."""
-        await self._request({"virtualMatchString": cpe_match, "resultsPerPage": 1}, [])
+        await self._request({"resultsPerPage": 1}, [])

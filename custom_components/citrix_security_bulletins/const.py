@@ -26,10 +26,10 @@ NVD_REQUEST_TIMEOUT: Final = 60
 PRODUCT_NETSCALER_ADC: Final = "netscaler_adc"
 PRODUCT_NETSCALER_GATEWAY: Final = "netscaler_gateway"
 
-# Product key -> CPE match string (vendor:product as used by NVD).
+# Product key -> CPE match string (full 13-part form with wildcards, as used by NVD).
 PRODUCT_CPES: Final[dict[str, str]] = {
-    PRODUCT_NETSCALER_ADC: "cpe:2.3:a:citrix:netscaler_application_delivery_controller",
-    PRODUCT_NETSCALER_GATEWAY: "cpe:2.3:a:citrix:netscaler_gateway",
+    PRODUCT_NETSCALER_ADC: "cpe:2.3:a:citrix:netscaler_application_delivery_controller:*:*:*:*:*:*:*:*",
+    PRODUCT_NETSCALER_GATEWAY: "cpe:2.3:a:citrix:netscaler_gateway:*:*:*:*:*:*:*:*",
 }
 
 PRODUCT_NAMES: Final[dict[str, str]] = {
