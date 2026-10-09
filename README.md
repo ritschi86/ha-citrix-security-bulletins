@@ -13,7 +13,9 @@ Custom Integration, die neue **Citrix NetScaler Security Bulletins** (CTX-Artike
 
 Citrix bietet keinen offiziellen maschinenlesbaren Feed mehr an (der frühere RSS-Feed liefert keine Daten mehr, offiziell gibt es nur E-Mail-Alerts). Die Integration nutzt deshalb die offizielle **NVD CVE API 2.0** des NIST:
 
-- Abfrage per CPE: `citrix:netscaler_application_delivery_controller` und `citrix:netscaler_gateway`
+- **Abfrage nach Herausgeber (CNA NetScaler):** Neue CVEs werden gefunden, sobald NetScaler sie veröffentlicht – auch wenn die NVD sie noch nicht analysiert hat (Status *Received*, noch keine CPE-Daten). Das Produkt wird dann aus der Beschreibung erkannt; nennt sie kein Produkt, gilt die CVE für alle ausgewählten Produkte.
+- Zusätzlich Abfrage per CPE: `citrix:netscaler_application_delivery_controller` und `citrix:netscaler_gateway` (analysierte Einträge, auch von anderen Herausgebern)
+- Events nur für Bulletins der letzten 7 Tage – so gibt es nach einem Neuabgleich keine Flut alter Meldungen.
 - Die CVEs werden anhand der Herstellerreferenz (z. B. `CTX696300`) zu **Bulletins gruppiert**, so wie Citrix sie veröffentlicht.
 - Erst kompletter Abruf, danach stündlich nur noch Änderungen (`lastModStartDate`), lokal zwischengespeichert.
 - Hinweis: Die NVD übernimmt neue CVEs meist innerhalb weniger Stunden nach der Citrix-Veröffentlichung.

@@ -10,7 +10,13 @@ from datetime import UTC, datetime
 import re
 from typing import Any
 
-from .const import CITRIX_ARTICLE_URL, NVD_DETAIL_URL, PRODUCT_NAMES
+from .const import (
+    CITRIX_ARTICLE_URL,
+    NVD_DETAIL_URL,
+    OTHER_PRODUCT_KEYWORDS,
+    PRODUCT_KEYWORDS,
+    PRODUCT_NAMES,
+)
 
 # Citrix knowledge base / security bulletin IDs, e.g. CTX696300.
 _CTX_RE = re.compile(r"\b(CTX\d{5,7})\b", re.IGNORECASE)
@@ -215,7 +221,39 @@ def _find_bulletin(references: list[dict[str, Any]]) -> tuple[str | None, str | 
     return fallback
 
 
-def parse_cve(item: dict[str, Any], product: str) -> Cve | None:
+def english_description(item: dict[str, Any]) -> str:
+    """Return the English description of an NVD item."""
+    return next(
+        (
+            d.get("value", "")
+            for d in item.get("cve", {}).get("descriptions", [])
+            if d.get("lang") == "en"
+        ),
+        "",
+    )
+
+
+def detect_products(description: str, selected: list[str]) -> set[str]:
+    """Map a CNA description to the selected products.
+
+    - Named products -> those of them that are selected.
+    - Only other NetScaler products named (Console, SDX, ...) -> none.
+    - No product named -> all selected products (better a false alarm than a miss).
+    """
+    text = description.lower()
+    named = {
+        product
+        for product, keywords in PRODUCT_KEYWORDS.items()
+        if any(keyword in text for keyword in keywords)
+    }
+    if named:
+        return named & set(selected)
+    if any(keyword in text for keyword in OTHER_PRODUCT_KEYWORDS):
+        return set()
+    return set(selected)
+
+
+def parse_cve(item: dict[str, Any], products: set[str]) -> Cve | None:
     """Parse one entry of the NVD 'vulnerabilities' list."""
     cve: dict[str, Any] = item.get("cve", {})
     cve_id = cve.get("id")
@@ -226,10 +264,7 @@ def parse_cve(item: dict[str, Any], product: str) -> Cve | None:
     if published is None or last_modified is None:
         return None
 
-    description = next(
-        (d.get("value", "") for d in cve.get("descriptions", []) if d.get("lang") == "en"),
-        "",
-    )
+    description = english_description(item)
     score, severity, version, vector = _pick_metric(cve.get("metrics", {}))
     bulletin_id, bulletin_url = _find_bulletin(cve.get("references", []))
 
@@ -245,7 +280,7 @@ def parse_cve(item: dict[str, Any], product: str) -> Cve | None:
         known_exploited=bool(cve.get("cisaExploitAdd")),
         bulletin_id=bulletin_id,
         bulletin_url=bulletin_url,
-        products={product},
+        products=set(products),
     )
 
 

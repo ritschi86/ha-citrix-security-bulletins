@@ -2,37 +2,70 @@ alias: Citrix Security Bulletin – iPhone-Benachrichtigung
 description: >-
   Meldet neue Citrix NetScaler Security Bulletins auf iphone_von_daniel.
   Schweregrad Hoch/Kritisch als kritische Nachricht (umgeht Stummschaltung
-  und Fokus), alle anderen als normale Nachricht.
+  und Fokus), alle anderen als normale Nachricht. Manuell über „Ausführen“
+  gestartet, wird eine Testnachricht mit Beispieldaten gesendet.
 mode: queued
 max: 10
 triggers:
   - trigger: state
     # Entity-ID ggf. anpassen (Geräte & Dienste → Citrix Security Bulletins)
-    entity_id: event.citrix_security_bulletins_neues_bulletin
-    not_from: unavailable
+    entity_id: event.system_citrix_security_bulletins_neues_bulletin
+    not_to:
+      - unavailable
+      - unknown
 conditions:
   - condition: template
-    value_template: "{{ trigger.to_state.attributes.event_type == 'new_bulletin' }}"
+    # Nur frische Events (Zustand = Zeitpunkt des Events). Ein nach dem Neustart
+    # wiederhergestellter alter Zustand löst so nicht erneut aus, ein Event direkt
+    # beim Start (z. B. nachgeholtes Bulletin) dagegen schon.
+    # Ohne Event (z. B. Bedingung im Editor testen) gilt die Bedingung als erfüllt.
+    value_template: >-
+      {% if trigger is not defined or trigger.to_state is not defined
+            or trigger.to_state is none %}true
+      {%- else %}
+      {%- set ts = as_datetime(trigger.to_state.state) %}
+      {{- trigger.to_state.attributes.get('event_type') == 'new_bulletin'
+          and ts is not none and ts > now() - timedelta(minutes=10) }}
+      {%- endif %}
 actions:
   - variables:
-      b: "{{ trigger.to_state.attributes }}"
-      critical: "{{ b.severity in ['HIGH', 'CRITICAL'] }}"
+      # true, wenn über „Ausführen“ gestartet (kein Event vorhanden)
+      test: "{{ trigger is not defined or trigger.to_state is not defined or trigger.to_state is none }}"
+      bulletin_id: >-
+        {{ 'CTX000000' if test else trigger.to_state.attributes.get('bulletin_id', 'unbekannt') }}
+      title: >-
+        {{ 'TEST – NetScaler ADC and NetScaler Gateway Security Bulletin for CVE-0000-00000'
+           if test else trigger.to_state.attributes.get('title', '') }}
+      severity: >-
+        {{ 'CRITICAL' if test else (trigger.to_state.attributes.get('severity') or 'NONE') | upper }}
+      cvss: >-
+        {{ '9.5' if test else trigger.to_state.attributes.get('cvss_score') or '–' }}
+      products: >-
+        {{ 'NetScaler ADC, NetScaler Gateway' if test
+           else (trigger.to_state.attributes.get('products') or []) | join(', ') }}
+      exploited: >-
+        {{ true if test else trigger.to_state.attributes.get('known_exploited', false) }}
+      citrix_url: >-
+        {{ 'https://support.citrix.com/external/article/CTX697096' if test
+           else trigger.to_state.attributes.get('url', '') }}
+      nvd_url: >-
+        {% if test %}https://nvd.nist.gov/vuln/detail/CVE-2026-88771
+        {%- else %}{% set a = trigger.to_state.attributes %}
+        {{- a.get('nvd_url') or (a.get('nvd_urls') or [a.get('url', '')])[0] }}
+        {%- endif %}
+      critical: "{{ severity in ['HIGH', 'CRITICAL'] }}"
       severity_de: >-
-        {{ {'CRITICAL': 'Kritisch', 'HIGH': 'Hoch', 'MEDIUM': 'Mittel',
-            'LOW': 'Niedrig', 'NONE': 'Keine'}.get(b.severity, 'Unbekannt') }}
-      nvd_url: "{{ b.nvd_url | default(b.nvd_urls[0] if b.nvd_urls else b.url) }}"
+        {{ {'CRITICAL': 'Kritisch', 'HIGH': 'Hoch', 'MEDIUM': 'Mittel', 'LOW': 'Niedrig', 'NONE': 'Keine'}.get(severity, severity) }}
   - action: notify.mobile_app_iphone_von_daniel
     data:
-      title: "Citrix {{ severity_de }}: {{ b.bulletin_id }}"
-      subtitle: >-
-        CVSS {{ b.cvss_score if b.cvss_score is not none else '–' }} ·
-        {{ b.products | join(', ') }}
-      message: >-
-        {{ '⚠️ Laut CISA aktiv ausgenutzt! ' if b.known_exploited }}{{ b.title }}
+      title: "{{ '[TEST] ' if test }}Citrix {{ severity_de }}: {{ bulletin_id }}"
+      message: "{{ '⚠️ Laut CISA aktiv ausgenutzt! ' if exploited }}{{ title }}"
       data:
-        url: "{{ b.url }}"
+        # iOS: subtitle gehört in data, nicht auf die oberste Ebene
+        subtitle: "CVSS {{ cvss }} · {{ products }}"
+        url: "{{ citrix_url }}"
         group: citrix-security-bulletins
-        tag: "{{ b.bulletin_id }}"
+        tag: "{{ bulletin_id }}"
         push:
           interruption-level: "{{ 'critical' if critical else 'active' }}"
           sound:
@@ -42,7 +75,7 @@ actions:
         actions:
           - action: URI
             title: Citrix-Artikel
-            uri: "{{ b.url }}"
+            uri: "{{ citrix_url }}"
           - action: URI
             title: NIST NVD
             uri: "{{ nvd_url }}"

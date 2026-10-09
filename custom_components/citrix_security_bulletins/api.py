@@ -102,18 +102,20 @@ class NvdClient:
 
     async def async_get_cves(
         self,
-        cpe_match: str,
+        cpe_match: str | None = None,
         last_mod_start: datetime | None = None,
         last_mod_end: datetime | None = None,
+        source_identifier: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Return all CVEs matching a CPE, optionally modified within a range.
+        """Return all CVEs matching a CPE or a source (CNA).
 
-        The range must not exceed 120 days (NVD API limit).
+        Optionally limited to CVEs modified within a range of at most 120 days.
         """
-        params: dict[str, Any] = {
-            "virtualMatchString": cpe_match,
-            "resultsPerPage": NVD_RESULTS_PER_PAGE,
-        }
+        params: dict[str, Any] = {"resultsPerPage": NVD_RESULTS_PER_PAGE}
+        if cpe_match:
+            params["virtualMatchString"] = cpe_match
+        if source_identifier:
+            params["sourceIdentifier"] = source_identifier
         flags: list[str] = []
         if last_mod_start and last_mod_end:
             params["lastModStartDate"] = _format_datetime(last_mod_start)

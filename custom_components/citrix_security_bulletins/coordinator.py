@@ -16,16 +16,26 @@ from homeassistant.util import dt as dt_util
 
 from .api import NvdAuthError, NvdClient, NvdError
 from .const import (
+    CACHE_SCHEMA,
     CONF_PRODUCTS,
     DEFAULT_PRODUCTS,
     DOMAIN,
+    MAX_EVENT_AGE,
+    NETSCALER_CNA_SOURCE,
     NVD_MAX_RANGE,
     PRODUCT_CPES,
     STORAGE_KEY,
     STORAGE_VERSION,
     UPDATE_INTERVAL,
 )
-from .models import Bulletin, Cve, group_bulletins, parse_cve
+from .models import (
+    Bulletin,
+    Cve,
+    detect_products,
+    english_description,
+    group_bulletins,
+    parse_cve,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,13 +93,18 @@ class CitrixBulletinCoordinator(DataUpdateCoordinator[CitrixBulletinData]):
             _LOGGER.debug("Product selection changed, discarding cache")
             return
         try:
+            self._seen = set(stored.get("seen", []))
+            self._baseline_done = bool(stored.get("baseline_done"))
+            if stored.get("schema") != CACHE_SCHEMA:
+                # Queries changed: full re-sync, but keep the reported bulletins
+                # so bulletins missed by the old queries are reported now.
+                _LOGGER.info("Cache schema changed, performing a full re-sync")
+                return
             self._cves = {
                 cve_id: Cve.from_dict(data) for cve_id, data in stored["cves"].items()
             }
-            self._seen = set(stored.get("seen", []))
             last_sync = stored.get("last_sync")
             self._last_sync = datetime.fromisoformat(last_sync) if last_sync else None
-            self._baseline_done = bool(stored.get("baseline_done"))
         except (KeyError, TypeError, ValueError) as err:
             _LOGGER.warning("Ignoring invalid cache: %s", err)
             self._cves, self._seen, self._last_sync = {}, set(), None
@@ -112,13 +127,21 @@ class CitrixBulletinCoordinator(DataUpdateCoordinator[CitrixBulletinData]):
             cves = {k: replace(v, products=set(v.products)) for k, v in self._cves.items()}
 
         try:
+            end = now if start else None
+            # 1) NetScaler CNA records: available as soon as NetScaler publishes,
+            #    before NVD analysts add CPE data.
+            items = await self.client.async_get_cves(
+                source_identifier=NETSCALER_CNA_SOURCE,
+                last_mod_start=start,
+                last_mod_end=end,
+            )
+            self._merge(cves, items, None, self.products)
+            # 2) CPE matches: analysed records, including other CNAs (e.g. Citrix).
             for product in self.products:
                 items = await self.client.async_get_cves(
-                    PRODUCT_CPES[product],
-                    last_mod_start=start,
-                    last_mod_end=now if start else None,
+                    PRODUCT_CPES[product], last_mod_start=start, last_mod_end=end
                 )
-                self._merge(cves, items, product)
+                self._merge(cves, items, product, self.products)
         except NvdAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_api_key"
@@ -133,17 +156,26 @@ class CitrixBulletinCoordinator(DataUpdateCoordinator[CitrixBulletinData]):
         self._cves = cves
         self._last_sync = now
         bulletins = group_bulletins(cves)
-        current_ids = {b.bulletin_id for b in bulletins}
+        # Remember bulletin IDs and CVE IDs, so a CVE first reported without CTX
+        # reference is not reported again once NVD adds the reference.
+        current_ids = {b.bulletin_id for b in bulletins} | set(cves)
 
         new_bulletins: list[Bulletin] = []
         if self._baseline_done:
             # Oldest first, so events fire in chronological order.
-            new_bulletins = [b for b in reversed(bulletins) if b.bulletin_id not in self._seen]
+            new_bulletins = [
+                b
+                for b in reversed(bulletins)
+                if b.bulletin_id not in self._seen
+                and not any(cve_id in self._seen for cve_id in b.cve_ids)
+                and now - b.published <= MAX_EVENT_AGE
+            ]
         self._seen |= current_ids
         self._baseline_done = True
 
         await self._store.async_save(
             {
+                "schema": CACHE_SCHEMA,
                 "products": self.products,
                 "last_sync": now.isoformat(),
                 "baseline_done": True,
@@ -157,15 +189,31 @@ class CitrixBulletinCoordinator(DataUpdateCoordinator[CitrixBulletinData]):
         )
 
     @staticmethod
-    def _merge(cves: dict[str, Cve], items: list[dict[str, Any]], product: str) -> None:
-        """Merge NVD results for one product into the CVE dict."""
+    def _merge(
+        cves: dict[str, Cve],
+        items: list[dict[str, Any]],
+        product: str | None,
+        selected: list[str],
+    ) -> None:
+        """Merge NVD results into the CVE dict.
+
+        product: the product of a CPE query, or None for the CNA query
+        (products are then derived from the description).
+        """
         for item in items:
             cve_id = item.get("cve", {}).get("id")
-            parsed = parse_cve(item, product)
+            if product is None:
+                products = detect_products(english_description(item), selected)
+            else:
+                products = {product}
+            parsed = parse_cve(item, products) if products else None
             if parsed is None:
-                # Rejected or unparsable: remove the product, drop if orphaned.
+                # Rejected, unparsable or not relevant for this query.
                 if cve_id in cves:
-                    cves[cve_id].products.discard(product)
+                    if product is not None:
+                        cves[cve_id].products.discard(product)
+                    elif item.get("cve", {}).get("vulnStatus") == "Rejected":
+                        cves[cve_id].products.clear()
                     if not cves[cve_id].products:
                         del cves[cve_id]
                 continue

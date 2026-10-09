@@ -34,6 +34,34 @@ PRODUCT_CPES: Final[dict[str, str]] = {
     PRODUCT_NETSCALER_GATEWAY: "cpe:2.3:a:citrix:netscaler_gateway:*:*:*:*:*:*:*:*",
 }
 
+# NVD sourceIdentifier of the NetScaler CNA (= assignerOrgId in the CVE record).
+# Querying by source finds new CVEs immediately; CPE data is only added later
+# by NVD analysts (status "Received"/"Awaiting Analysis" has no CPEs).
+NETSCALER_CNA_SOURCE: Final = "50a63c94-1ea7-4568-8c11-eb79e7c5a2b5"
+
+# Keywords to map a CNA description to a product (lowercase).
+PRODUCT_KEYWORDS: Final[dict[str, tuple[str, ...]]] = {
+    PRODUCT_NETSCALER_ADC: ("netscaler adc", "citrix adc", "application delivery controller"),
+    PRODUCT_NETSCALER_GATEWAY: ("netscaler gateway", "citrix gateway"),
+}
+# Other NetScaler products of the same CNA that are not monitored.
+OTHER_PRODUCT_KEYWORDS: Final[tuple[str, ...]] = (
+    "netscaler console",
+    "netscaler adm",
+    "application delivery management",
+    "netscaler sdx",
+    "netscaler agent",
+    "netscaler bot",
+)
+
+# Only bulletins published within this period trigger an event. Prevents a flood
+# of events for old bulletins after a re-sync, while still catching late ones.
+MAX_EVENT_AGE: Final = timedelta(days=7)
+
+# Bump when the set of NVD queries changes: forces a full re-sync while keeping
+# the list of already reported bulletins, so missed bulletins are reported.
+CACHE_SCHEMA: Final = 2
+
 PRODUCT_NAMES: Final[dict[str, str]] = {
     PRODUCT_NETSCALER_ADC: "NetScaler ADC",
     PRODUCT_NETSCALER_GATEWAY: "NetScaler Gateway",

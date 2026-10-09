@@ -53,7 +53,7 @@ def nvd_item(cve_id, published, ctx=None, v4=None, v31=None, kev=False, status="
 def test_parse_prefers_v4_and_extracts_ctx():
     cve = models.parse_cve(
         nvd_item("CVE-2026-1", "2026-09-27T15:15:10.123", "CTX697096", v4=(9.3, "CRITICAL"), v31=(7.5, "HIGH"), kev=True),
-        "netscaler_adc",
+        {"netscaler_adc"},
     )
     assert cve.cvss_score == 9.3 and cve.severity == "CRITICAL" and cve.cvss_version == "4.0"
     assert cve.bulletin_id == "CTX697096" and "articleNumber=CTX697096" in cve.bulletin_url
@@ -62,8 +62,8 @@ def test_parse_prefers_v4_and_extracts_ctx():
 
 
 def test_rejected_and_ctx_without_vendor_tag():
-    assert models.parse_cve(nvd_item("CVE-2026-9", "2026-01-01T00:00:00", status="Rejected"), "x") is None
-    cve = models.parse_cve(nvd_item("CVE-2026-8", "2026-01-01T00:00:00", "ctx123456", tags=[]), "x")
+    assert models.parse_cve(nvd_item("CVE-2026-9", "2026-01-01T00:00:00", status="Rejected"), {"x"}) is None
+    cve = models.parse_cve(nvd_item("CVE-2026-8", "2026-01-01T00:00:00", "ctx123456", tags=[]), {"x"})
     assert cve.bulletin_id == "CTX123456"
 
 
@@ -77,7 +77,7 @@ def test_grouping_and_roundtrip():
     cves = {}
     for item in items:
         for product in ("netscaler_adc", "netscaler_gateway"):
-            parsed = models.parse_cve(item, product)
+            parsed = models.parse_cve(item, {product})
             if parsed.cve_id in cves:
                 parsed.products |= cves[parsed.cve_id].products
             cves[parsed.cve_id] = parsed
@@ -102,3 +102,12 @@ def test_grouping_and_roundtrip():
     assert data["nvd_url"] == "https://nvd.nist.gov/vuln/detail/CVE-2026-88771"
     assert data["products"] == ["NetScaler ADC", "NetScaler Gateway"]
     assert data["published"].startswith("2026-09-27T15:00:00")
+
+
+def test_detect_products():
+    sel = ["netscaler_adc", "netscaler_gateway"]
+    assert models.detect_products("Flaw in NetScaler ADC and NetScaler Gateway", sel) == set(sel)
+    assert models.detect_products("Flaw in NetScaler Gateway", sel) == {"netscaler_gateway"}
+    assert models.detect_products("Flaw in NetScaler Gateway", ["netscaler_adc"]) == set()
+    assert models.detect_products("Privilege escalation in NetScaler Console", sel) == set()
+    assert models.detect_products("Memory overflow when configured as SAML SP", sel) == set(sel)
